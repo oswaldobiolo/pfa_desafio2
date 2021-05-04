@@ -1,0 +1,42 @@
+version: '3'
+
+services: 
+    php:
+        image: oswaldobiolo/desafio_pfa2_php:latest
+        container_name: php
+        entrypoint: dockerize -wait tcp://mysql:3306 -timeout 30s docker-php-entrypoint
+        command: php-fpm
+        tty: true
+        depends_on:
+            - mysql    
+        networks:
+            - php-mysql-net
+            - nginx-php-net
+    mysql:
+        image: mysql:5.7
+        restart: always
+        container_name: mysql
+        volumes:
+            - ./db:/docker-entrypoint-initdb.d
+            - ./dbdata:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD : root
+            MYSQL_DATABASE : db_fc
+        networks:
+            - php-mysql-net
+    nginx:
+        image: oswaldobiolo/desafio_pfa2_nginx
+        container_name: nginx
+        restart: always
+        depends_on:
+            - php
+        networks:
+            - nginx-php-net
+        ports:
+            - 8000:80
+networks:
+    php-mysql-net:
+        driver: bridge
+    nginx-php-net:
+        driver: bridge
+    
